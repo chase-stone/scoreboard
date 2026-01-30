@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scoreboard</title>
+    <style>
+        :root {
+            box-sizing: border-box;
+            line-height: 1.4;
+            text-size-adjust: none;
+            font-family: monospace;
+        }
+
+        *, *::before, *::after {
+            box-sizing: inherit;
+        }
+        
+        body, h1, h2, h3, h4, h5, h6, p {
+            margin: 0;
+            padding: 0;
+            font-weight: normal;
+        }
+
+        body {
+            font-size: 12pt;
+            background-color: black;
+            color: white;
+        }
+        
+        .sb {
+            display: grid;
+            grid-template-rows: repeat(12, 1f);
+            grid-template-columns: repeat(12, 1f);
+            background-color: black;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .sb_score {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .sb_score_team {
+            font-size: 5rem;
+        }
+
+        .sb_score_value {
+            font-size: 20rem;
+        }
+
+        .sb_score-home {
+            grid-area: 1 / 1 / 13 / 7;
+            background-color: red;
+            border-right: 3px solid white;
+        }
+
+        .sb_score-away {
+            grid-area: 1 / 7 / 13 / 13;
+            background-color: blue;
+            border-left: 3px solid white;
+        }
+
+        .sb_float {
+            background-color: black;
+            border: 2px solid white;
+            border-radius: 0.5rem;
+            justify-self: center;
+            align-self: center;
+            padding: 0.5rem 1rem;
+            z-index: 1;
+        }
+
+        .sb_time {
+            grid-area: 1 / 5 / 2 / 9;
+            font-size: 4rem;
+        }
+
+        .sb_fouls {
+            font-size: 2rem;
+        }
+
+        .sb_fouls_home {
+            grid-area: 1 / 1 / 2 / 3;
+        }
+
+        .sb_fouls_away {
+            grid-area: 1 / 11 / 2 / 13;
+        }
+
+        .sb_ctrl {
+            display: flex;
+            flex-direction: row;
+            justify-self: center;
+            z-index: 1;
+            margin: 0.5rem;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .sb_ctrl_item {
+            font-size: 1.25rem;
+            margin: 0 0.5rem;
+        }
+
+        .sb_ctrl_home {
+            grid-area: 12 / 2 / 13 / 6;
+        }
+
+        .sb_ctrl_away {
+            grid-area: 12 / 8 / 13 / 12;
+        }
+
+        .sb_ctrl_all {
+            grid-area: 12 / 6 / 13 / 8;
+        }
+    </style>
+</head>
+<body>
+    <div class="sb">
+        <div class="sb_score sb_score-home">
+            <div class="sb_score_team">HOME</div>
+            <div class="sb_score_value">0</div>
+        </div>
+        <div class="sb_score sb_score-away">
+            <div class="sb_score_team">GUEST</div>
+            <div class="sb_score_value">0</div></div>
+        <div class="sb_time sb_float">00:00</div>
+        <div class="sb_fouls sb_fouls_home sb_float">
+            Fouls:
+            <div class="sb_fouls_value">0</div>
+        </div>
+        <div class="sb_fouls sb_fouls_away sb_float">
+            Fouls:
+            <div class="sb_fouls_value">0</div>
+        </div>
+        <div class="sb_ctrl sb_ctrl_home">
+            <div class="sb_ctrl_item sb_float sb_ctrl_home_score_incr">+Score</div>
+            <div class="sb_ctrl_item sb_float sb_ctrl_home_score_decr">-Score</div>
+            <div class="sb_ctrl_item sb_float sb_ctrl_home_foul_incr">+Foul</div>
+            <div class="sb_ctrl_item sb_float sb_ctrl_home_foul_decr">-Foul</div>
+        </div>
+        <div class="sb_ctrl sb_ctrl_away">
+            <div class="sb_ctrl_item sb_float sb_ctrl_away_score_incr">+Score</div>
+            <div class="sb_ctrl_item sb_float sb_ctrl_away_score_decr">-Score</div>
+            <div class="sb_ctrl_item sb_float sb_ctrl_away_foul_incr">+Foul</div>
+            <div class="sb_ctrl_item sb_float sb_ctrl_away_foul_decr">-Foul</div>
+        </div>
+        <div class="sb_ctrl sb_ctrl_all">
+            <div class="sb_ctrl_item sb_float sb_ctrl_reset">RESET</div>
+            <div class="sb_ctrl_item sb_float sb_ctrl_time_incr">+Time</div>
+            <div class="sb_ctrl_item sb_float sb_ctrl_time_decr">-Time</div>
+        </div>
+    </div>
+    <script>
+        const $score_home_area = document.querySelector(".sb_score-home");
+        const $score_home_value = $score_home_area.querySelector(".sb_score_value");
+        const $score_home_incr = document.querySelector(".sb_ctrl_home_score_incr");
+        const $score_home_decr = document.querySelector(".sb_ctrl_home_score_decr");
+
+        const $fouls_home_area = document.querySelector(".sb_fouls_home");
+        const $fouls_home_value = $fouls_home_area.querySelector(".sb_fouls_value");
+        const $fouls_home_incr = document.querySelector(".sb_ctrl_home_foul_incr");
+        const $fouls_home_decr = document.querySelector(".sb_ctrl_home_foul_decr");
+
+        const $score_away_area = document.querySelector(".sb_score-away");
+        const $score_away_value = $score_away_area.querySelector(".sb_score_value");
+        const $score_away_incr = document.querySelector(".sb_ctrl_away_score_incr");
+        const $score_away_decr = document.querySelector(".sb_ctrl_away_score_decr");
+        
+        const $fouls_away_area = document.querySelector(".sb_fouls_away");
+        const $fouls_away_value = $fouls_away_area.querySelector(".sb_fouls_value");
+        const $fouls_away_incr = document.querySelector(".sb_ctrl_away_foul_incr");
+        const $fouls_away_decr = document.querySelector(".sb_ctrl_away_foul_decr");
+
+        const $time_area = document.querySelector(".sb_time");
+        const $time_value = $time_area;
+        const $time_value_incr = document.querySelector(".sb_ctrl_time_incr");
+        const $time_value_decr = document.querySelector(".sb_ctrl_time_decr");
+
+        const $reset = document.querySelector(".sb_ctrl_reset");
+
+        function display_time(game) {
+            let ms = game.time_ms;
+            
+            if (ms < MS_PER_MINUTE) {
+                let seconds = Math.floor(ms / MS_PER_SECOND);
+                ms -= seconds * MS_PER_SECOND;
+                let tenths = Math.floor(ms / 100);
+
+                $time_value.textContent = 
+                    seconds.toString().padStart(2, "0") +
+                    "." +
+                    tenths.toString();
+            }
+            else {
+                let minutes = Math.floor(ms / MS_PER_MINUTE);
+                ms -= minutes * MS_PER_MINUTE;
+                let seconds = Math.floor(ms / MS_PER_SECOND);
+
+                $time_value.textContent =
+                    minutes.toString().padStart(2, "0") +
+                    ":" +
+                    seconds.toString().padStart(2, "0");
+            }
+        }
+
+        function display_home_score(game) {
+            $score_home_value.textContent = game.home_score;
+        }
+
+        function display_home_fouls(game) {
+            $fouls_home_value.textContent = game.home_fouls;
+        }
+
+        function display_away_score(game) {
+            $score_away_value.textContent = game.away_score;
+        }
+
+        function display_away_fouls(game) {
+            $fouls_away_value.textContent = game.away_fouls;
+        }
+
+        function score_is_valid(value) {
+            return value >= 0 && value <= 199;
+        }
+
+        function score_home_adjust(game, amount) {
+            const score = game.home_score + amount;
+            if (score_is_valid(score)) {
+                game.home_score = score;
+                display_home_score();
+            }
+        }
+
+        function score_away_adjust(game, amount) {
+            const score = game.away_score + amount;
+            if (score_is_valid(score)) {
+                game.away_score = score;
+                display_away_score();
+            }
+        }
+
+        function fouls_is_valid(value) {
+            return value >= 0 && value <= 10;
+        }
+
+        function fouls_home_adjust(game, amount) {
+            const fouls = game.home_fouls + amount;
+            if (fouls_is_valid(fouls)) {
+                game.home_fouls = fouls;
+                display_home_fouls();
+            }
+        }
+
+        function fouls_away_adjust(game, amount) {
+            const fouls = game.away_fouls + amount;
+            if (fouls_is_valid(fouls)) {
+                game.away_fouls = fouls;
+                display_away_fouls();
+            }
+        }
+
+        function time_adjust(game, amount) {
+            const ms = game.time_ms + amount;
+            if (ms < 0) ms = 0;
+            else if (ms > 1000 * 60 * 99) ms = 1000 * 60 * 99;
+
+            game.time_ms = ms;
+            display_time();
+        }
+
+        function game_stop(game) {
+            game.started = false;
+            cancelAnimationFrame(game.time_frame_id);
+        }
+
+        function game_start(game) {
+            game.started = true;
+            game.time_last_tick = performance.now();
+
+            function time_advance(frame) {
+                if (!game.started) return;
+
+                game.time_frame_id = requestAnimationFrame(time_advance);
+                game.time_diff_buffer += frame - game.time_last_tick;
+                game.time_last_tick = frame;
+
+                if (game.time_diff_buffer > MS_PER_FRAME) {
+                    const elapsed = Math.floor(game.time_diff_buffer / MS_PER_FRAME) * MS_PER_FRAME;
+                    game.time_ms = Math.max(0, game.time_ms - elapsed);
+                    game.time_diff_buffer -= elapsed;
+                    display_time(game);
+
+                    if (game.time_ms <= 0) {
+                        game_stop(game);
+                    }
+                }
+            }
+            
+            requestAnimationFrame(time_advance);
+        }
+
+        function game_reset(game) {
+            cancelAnimationFrame(game.time_frame_id);
+
+            game.time_ms = 1000 * 60 * 2;
+            game.time_frame_id = 0;
+            game.time_diff_buffer = 0;
+            game.time_last_tick = 0;
+            game.started = false;
+            game.home_score = 0;
+            game.home_fouls = 0;
+            game.away_score = 0;
+            game.away_fouls = 0;
+
+            display_time(game);
+            display_home_score(game);
+            display_home_fouls(game);
+            display_away_score(game);
+            display_away_fouls(game);
+        }
+
+        function toggle_started(game) {
+            if (game.started) {
+                game_stop(game);
+            }
+            else if (game.time_ms > 0) {
+                game_start(game);
+            }
+        }
+
+        const MS_PER_SECOND = 1000;
+        const MS_PER_MINUTE = MS_PER_SECOND * 60;
+        const FPS = 16;
+        const MS_PER_FRAME = MS_PER_SECOND / FPS;
+
+        const game = {};
+        game_reset(game);
+
+        $score_home_area.addEventListener("click", e => score_home_adjust(game, 1));
+        $score_home_incr.addEventListener("click", e => score_home_adjust(game, 1));
+        $score_home_decr.addEventListener("click", e => score_home_adjust(game, -1));
+        $fouls_home_area.addEventListener("click", e => fouls_home_adjust(game, 1));
+        $fouls_home_incr.addEventListener("click", e => fouls_home_adjust(game, 1));
+        $fouls_home_decr.addEventListener("click", e => fouls_home_adjust(game, -1));
+
+        $score_away_area.addEventListener("click", e => score_away_adjust(game, 1));
+        $score_away_incr.addEventListener("click", e => score_away_adjust(game, 1));
+        $score_away_decr.addEventListener("click", e => score_away_adjust(game, -1));
+        $fouls_away_area.addEventListener("click", e => fouls_away_adjust(game, 1));
+        $fouls_away_incr.addEventListener("click", e => fouls_away_adjust(game, 1));
+        $fouls_away_decr.addEventListener("click", e => fouls_away_adjust(game, -1));
+
+        $time_value_incr.addEventListener("click", e => time_adjust(game, 10 * 1000));
+        $time_value_decr.addEventListener("click", e => time_adjust(game, -(10 * 1000)));
+        $time_area.addEventListener("click", e => toggle_started(game));
+
+        $reset.addEventListener("click", e => game_reset(game));
+    </script>
+</body>
+</html>

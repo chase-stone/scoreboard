@@ -12,6 +12,10 @@
             font-family: monospace;
         }
 
+        html {
+            font-size: 16px;
+        }
+
         *, *::before, *::after {
             box-sizing: inherit;
         }
@@ -23,7 +27,6 @@
         }
 
         body {
-            font-size: 12pt;
             background-color: black;
             color: white;
         }
@@ -45,11 +48,11 @@
         }
 
         .sb_score_team {
-            font-size: 5rem;
+            font-size: 2.5rem;
         }
 
         .sb_score_value {
-            font-size: 20rem;
+            font-size: 4rem;
         }
 
         .sb_score-home {
@@ -68,54 +71,61 @@
             background-color: black;
             border: 2px solid white;
             border-radius: 0.5rem;
-            justify-self: center;
-            align-self: center;
             padding: 0.5rem 1rem;
             z-index: 1;
         }
 
         .sb_time {
             grid-area: 1 / 5 / 2 / 9;
-            font-size: 4rem;
+            font-size: 2rem;
+            justify-self: center;
+            align-self: center;
         }
 
         .sb_fouls {
-            font-size: 2rem;
+            align-self: center;
         }
 
         .sb_fouls_home {
             grid-area: 1 / 1 / 2 / 3;
+            justify-self: baseline;
         }
 
         .sb_fouls_away {
             grid-area: 1 / 11 / 2 / 13;
+            justify-self: end;
         }
 
-        .sb_ctrl {
+        .sb_ctrl-row {
             display: flex;
             flex-direction: row;
-            justify-self: center;
             z-index: 1;
-            margin: 0.5rem;
-            justify-content: center;
-            align-items: center;
         }
 
-        .sb_ctrl_item {
-            font-size: 1.25rem;
+        .sb_ctrl-row .sb_ctrl_item {
             margin: 0 0.5rem;
         }
 
+        .sb_ctrl-col .sb_ctrl_item {
+            margin: 0.5rem 0;
+        }
+
         .sb_ctrl_home {
-            grid-area: 12 / 2 / 13 / 6;
+            grid-area: 1 / 1 / 13 / 3;
+            justify-self: baseline;
+            align-self: end;
         }
 
         .sb_ctrl_away {
-            grid-area: 12 / 8 / 13 / 12;
+            grid-area: 1 / 11 / 13 / 13;
+            justify-self: end;
+            align-self: end;
         }
 
         .sb_ctrl_all {
             grid-area: 12 / 6 / 13 / 8;
+            justify-self: center;
+            align-self: center;
         }
     </style>
 </head>
@@ -131,25 +141,25 @@
         <div class="sb_time sb_float">00:00</div>
         <div class="sb_fouls sb_fouls_home sb_float">
             Fouls:
-            <div class="sb_fouls_value">0</div>
+            <span class="sb_fouls_value">0</span>
         </div>
         <div class="sb_fouls sb_fouls_away sb_float">
             Fouls:
-            <div class="sb_fouls_value">0</div>
+            <span class="sb_fouls_value">0</span>
         </div>
-        <div class="sb_ctrl sb_ctrl_home">
+        <div class="sb_ctrl-col sb_ctrl_home">
             <div class="sb_ctrl_item sb_float sb_ctrl_home_score_incr">+Score</div>
             <div class="sb_ctrl_item sb_float sb_ctrl_home_score_decr">-Score</div>
             <div class="sb_ctrl_item sb_float sb_ctrl_home_foul_incr">+Foul</div>
             <div class="sb_ctrl_item sb_float sb_ctrl_home_foul_decr">-Foul</div>
         </div>
-        <div class="sb_ctrl sb_ctrl_away">
+        <div class="sb_ctrl-col sb_ctrl_away">
             <div class="sb_ctrl_item sb_float sb_ctrl_away_score_incr">+Score</div>
             <div class="sb_ctrl_item sb_float sb_ctrl_away_score_decr">-Score</div>
             <div class="sb_ctrl_item sb_float sb_ctrl_away_foul_incr">+Foul</div>
             <div class="sb_ctrl_item sb_float sb_ctrl_away_foul_decr">-Foul</div>
         </div>
-        <div class="sb_ctrl sb_ctrl_all">
+        <div class="sb_ctrl-row sb_ctrl_all">
             <div class="sb_ctrl_item sb_float sb_ctrl_reset">RESET</div>
             <div class="sb_ctrl_item sb_float sb_ctrl_time_incr">+Time</div>
             <div class="sb_ctrl_item sb_float sb_ctrl_time_decr">-Time</div>
@@ -232,7 +242,7 @@
             const score = game.home_score + amount;
             if (score_is_valid(score)) {
                 game.home_score = score;
-                display_home_score();
+                display_home_score(game);
             }
         }
 
@@ -240,7 +250,7 @@
             const score = game.away_score + amount;
             if (score_is_valid(score)) {
                 game.away_score = score;
-                display_away_score();
+                display_away_score(game);
             }
         }
 
@@ -252,7 +262,7 @@
             const fouls = game.home_fouls + amount;
             if (fouls_is_valid(fouls)) {
                 game.home_fouls = fouls;
-                display_home_fouls();
+                display_home_fouls(game);
             }
         }
 
@@ -260,7 +270,7 @@
             const fouls = game.away_fouls + amount;
             if (fouls_is_valid(fouls)) {
                 game.away_fouls = fouls;
-                display_away_fouls();
+                display_away_fouls(game);
             }
         }
 
@@ -270,7 +280,7 @@
             else if (ms > 1000 * 60 * 99) ms = 1000 * 60 * 99;
 
             game.time_ms = ms;
-            display_time();
+            display_time(game);
         }
 
         function game_stop(game) {
